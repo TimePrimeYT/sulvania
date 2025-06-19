@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Inscription - Sulvania Chat</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #1f0b2d, #2d103f);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .register-container {
+      background-color: #2b1139;
+      padding: 30px;
+      border-radius: 12px;
+      width: 320px;
+      box-shadow: 0 0 10px #9c44ff;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #9c44ff;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: none;
+      border-radius: 8px;
+      background-color: #1e0a2b;
+      color: white;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #9c44ff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background-color: #b76aff;
+    }
+
+    .bottom-text {
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    .bottom-text a {
+      color: #9c44ff;
+      text-decoration: none;
+    }
+
+    .error {
+      color: #ff4c4c;
+      text-align: center;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="register-container">
+    <h2>Inscription</h2>
+    <form id="registerForm">
+      <input type="email" id="email" placeholder="Adresse email" required />
+      <input type="text" id="username" placeholder="Nom d'utilisateur" required />
+      <input type="password" id="password" placeholder="Mot de passe" required />
+      <button type="submit">Créer le compte</button>
+    </form>
+    <div class="bottom-text">
+      Déjà un compte ? <a href="login.html">Clique ici pour te connecter</a>
+    </div>
+    <div class="error" id="errorMsg"></div>
+  </div>
+
+  <script>
+    document.getElementById("registerForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const email = document.getElementById("email").value.trim();
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      try {
+        const response = await fetch("/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, username, password }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          localStorage.setItem("pseudo", username);
+          window.location.href = "home.html";
+        } else {
+          document.getElementById("errorMsg").textContent =
+            result.message || "❌ Erreur lors de la création du compte.";
+        }
+      } catch (err) {
+        document.getElementById("errorMsg").textContent = "❌ Erreur serveur. Réessaye.";
+      }
+    });
+  </script>
+</body>
+</html>

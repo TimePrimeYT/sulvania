@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Accueil Sulvania</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+    h1 { margin-bottom: 20px; }
+    #contacts { margin-bottom: 20px; }
+    #chat {
+      border: 1px solid #ccc;
+      padding: 10px;
+      height: 300px;
+      overflow-y: auto;
+      background: white;
+      margin-bottom: 10px;
+    }
+    #messageInput {
+      width: 80%;
+      padding: 10px;
+      font-size: 16px;
+    }
+    #sendBtn {
+      padding: 10px 15px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 4px;
+      border: none;
+      background-color: #007bff;
+      color: white;
+    }
+    #contactsList li {
+      cursor: pointer;
+      margin: 5px 0;
+    }
+    #contactsList li:hover {
+      background-color: #ddd;
+    }
+    button.logout {
+      background-color: #dc3545;
+      margin-top: 10px;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Bienvenue, <span id="pseudoDisplay"></span></h1>
+  <div>
+    <h3>Contacts :</h3>
+    <ul id="contactsList">Chargement...</ul>
+  </div>
+
+  <div id="chat">Sélectionnez un contact pour discuter.</div>
+
+  <input type="text" id="messageInput" placeholder="Écrire un message..." />
+  <button id="sendBtn">Envoyer</button>
+  <br>
+  <button class="logout" id="logoutBtn">Déconnexion</button>
+
+  <script>
+    const pseudo = localStorage.getItem('pseudo');
+    if (!pseudo) {
+      alert('Tu dois être connecté');
+      window.location.href = 'login.html';
+    } else {
+      document.getElementById('pseudoDisplay').textContent = pseudo;
+    }
+
+    let currentContact = null;
+
+    async function loadContacts() {
+      const resp = await fetch('/get-contacts', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ username: pseudo })
+      });
+      const data = await resp.json();
+      const contactsList = document.getElementById('contactsList');
+      contactsList.innerHTML = '';
+      if (data.contacts.length === 0) {
+        contactsList.textContent = 'Aucun contact.';
+        return;
+      }
+      data.contacts.forEach(contact => {
+        const li = document.createElement('li');
+        li.textContent = contact;
+        li.onclick = () => {
+          currentContact = contact;
+          loadMessages(contact);
+        };
+        contactsList.appendChild(li);
+      });
+    }
+
+    async function loadMessages(contact) {
+      if (!contact) return;
+      const resp = await fetch('/get-messages', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ user1: pseudo, user2: contact })
+      });
+      const data = await resp.json();
+      const chatDiv = document.getElementById('chat');
+      chatDiv.innerHTML = '';
+      if (data.messages.length === 0) {
+        chatDiv.textContent = 'Aucun message.';
+        return;
+      }
+      data.messages.forEach(msg => {
+        const div = document.createElement('div');
+        div.textContent = `${msg.from}: ${msg.message}`;
+        chatDiv.appendChild(div);
+      });
+      chatDiv.scrollTop = chatDiv.scrollHeight;
+    }
+
+    document.getElementById('sendBtn').onclick = async () => {
+      const messageInput = document.getElementById('messageInput');
+      const msg = messageInput.value.trim();
+      if (!msg || !currentContact) return alert('Sélectionne un contact et écris un message.');
+
+      await fetch('/send-message', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ from: pseudo, to: currentContact, message: msg })
+      });
+
+      messageInput.value = '';
+      loadMessages(currentContact);
+    };
+
+    document.getElementById('logoutBtn').onclick = () => {
+      localStorage.removeItem('pseudo');
+      window.location.href = 'login.html';
+    };
+
+    loadContacts();
+  </script>
+</body>
+</html>
