@@ -1,0 +1,14 @@
+{
+  "admin": {
+    "password": "admin",
+    "contacts": [
+      "TimePrime"
+    ]
+  },
+  "TimePrime": {
+    "password": "abdel542",
+    "contacts": [
+      "admin"
+    ]
+  }
+}

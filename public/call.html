@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Appel - Sulvania</title>
+  <style>
+    body {
+      margin: 0;
+      background: linear-gradient(135deg, #1f0b2d, #2d103f);
+      font-family: sans-serif;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100vh;
+      text-align: center;
+    }
+
+    .header {
+      padding: 20px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      background-color: #2b1139;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
+
+    .status {
+      margin-top: 50px;
+      font-size: 1.2rem;
+      color: #ccc;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      padding: 40px;
+    }
+
+    .round-btn {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: none;
+      background-color: #9c44ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: white;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .round-btn:hover {
+      background-color: #b76aff;
+    }
+
+    .red {
+      background-color: #ff3c3c;
+    }
+
+    .red:hover {
+      background-color: #ff6b6b;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header" id="contactName">Appel avec ...</div>
+  <div class="status" id="statusText">Connexion en cours...</div>
+
+  <div class="buttons">
+    <button class="round-btn" id="muteBtn" title="Couper micro">🎙️</button>
+    <button class="round-btn" id="volumeBtn" title="Désactiver le son">🎧</button>
+    <button class="round-btn red" id="hangupBtn" title="Raccrocher">❌</button>
+  </div>
+
+  <script>
+    const contact = localStorage.getItem('contactAppel') || \"Inconnu\";
+    document.getElementById('contactName').textContent = \"Appel avec \" + contact;
+
+    let isMuted = false;
+    let isDeaf = false;
+
+    document.getElementById('muteBtn').addEventListener('click', () => {
+      isMuted = !isMuted;
+      document.getElementById('muteBtn').style.opacity = isMuted ? 0.5 : 1;
+      // TODO: mute local microphone (WebRTC plus tard)
+    });
+
+    document.getElementById('volumeBtn').addEventListener('click', () => {
+      isDeaf = !isDeaf;
+      document.getElementById('volumeBtn').style.opacity = isDeaf ? 0.5 : 1;
+      // TODO: mute remote audio (WebRTC plus tard)
+    });
+
+    document.getElementById('hangupBtn').addEventListener('click', () => {
+      window.location.href = 'home.html';
+    });
+  </script>
+
+</body>
+</html>

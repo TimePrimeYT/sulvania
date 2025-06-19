@@ -1,0 +1,34 @@
+{
+  "TimePrime__admin": [
+    {
+      "from": "TimePrime",
+      "message": "bonjour",
+      "date": "2025-06-19T13:04:43.207Z"
+    },
+    {
+      "from": "admin",
+      "message": "cv",
+      "date": "2025-06-19T13:04:52.016Z"
+    },
+    {
+      "from": "TimePrime",
+      "message": "trkl",
+      "date": "2025-06-19T13:04:59.222Z"
+    },
+    {
+      "from": "TimePrime",
+      "message": "CC",
+      "date": "2025-06-19T14:18:52.994Z"
+    },
+    {
+      "from": "TimePrime",
+      "message": "salam",
+      "date": "2025-06-19T18:26:38.836Z"
+    },
+    {
+      "from": "admin",
+      "message": "salem cv",
+      "date": "2025-06-19T18:27:07.143Z"
+    }
+  ]
+}

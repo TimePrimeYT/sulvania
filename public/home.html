@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Accueil - Sulvania</title>
+  <style>
+    :root {
+      --bg-start: #1f0b2d;
+      --bg-end: #2d103f;
+      --sidebar-bg: #2b1139;
+      --content-bg: #1e0a2b;
+      --text-color: #fff;
+      --accent: #9c44ff;
+      --accent-hover: #b76aff;
+      --danger: #ff3c3c;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background: linear-gradient(135deg, var(--bg-start), var(--bg-end)); height: 100vh; display: flex; flex-direction: column; color: var(--text-color); }
+    header, .chat-header { display: flex; align-items: center; justify-content: space-between; background-color: var(--sidebar-bg); padding: 10px 20px; }
+    .search-bar { background-color: #1e0a2b; border: none; border-radius: 8px; padding: 8px 12px; color: white; width: 250px; }
+    .search-bar::placeholder { color: #aaa; }
+    .add-btn { background-color: var(--accent); color: white; padding: 8px 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    .add-btn:hover { background-color: var(--accent-hover); }
+    main { display: flex; flex-grow: 1; }
+    .sidebar { width: 280px; background-color: var(--sidebar-bg); padding: 20px; display: flex; flex-direction: column; }
+    .sidebar h2 { font-size: 1.2rem; color: var(--accent); margin-bottom: 20px; }
+    .friend-list { display: flex; flex-direction: column; gap: 10px; cursor: pointer; }
+    .friend { background-color: #1e0a2b; padding: 10px; border-radius: 8px; }
+    .content { flex-grow: 1; background-color: var(--content-bg); display: flex; flex-direction: column; }
+    .welcome-box { text-align: center; margin: auto; }
+    .welcome-box h1 { color: var(--accent); margin-bottom: 10px; }
+    .popup { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.7); display: none; align-items: center; justify-content: center; }
+    .popup-box { background-color: #2b1139; padding: 30px; border-radius: 12px; position: relative; width: 300px; text-align: center; }
+    .popup-box input { width: 100%; padding: 10px; border-radius: 8px; border: none; background: #1e0a2b; color: white; margin-bottom: 15px; }
+    .popup-box button { padding: 10px 20px; border: none; background-color: var(--accent); color: white; border-radius: 8px; cursor: pointer; }
+    .popup-box button:hover { background-color: var(--accent-hover); }
+    .close-btn { position: absolute; top: 10px; right: 15px; background: none; color: var(--danger); font-size: 20px; border: none; cursor: pointer; }
+    .error-message { color: var(--danger); font-size: 0.9rem; margin-top: 5px; }
+    .user-profile { margin-top: auto; background-color: #1a0825; display: flex; align-items: center; padding: 8px 12px; border-top: 1px solid rgba(255, 255, 255, 0.05); border-radius: 10px 10px 0 0; gap: 10px; height: 60px; }
+    .avatar { width: 40px; height: 40px; border-radius: 50%; background-color: #9c44ff; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; }
+    .username { flex: 1; color: white; font-weight: bold; font-size: 0.95rem; }
+    .settings-btn { background: none; border: none; color: #ccc; font-size: 1.1rem; cursor: pointer; transition: color 0.3s ease; }
+    .settings-btn:hover { color: #ffffff; }
+    .chat-area { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .chat-message { background-color: #31124a; padding: 10px; border-radius: 8px; max-width: 60%; }
+    .chat-message.me { align-self: flex-end; background-color: #9c44ff; }
+    .chat-input { display: flex; padding: 10px; background-color: #1e0a2b; }
+    .chat-input input { flex: 1; padding: 10px; border: none; border-radius: 8px; background-color: #2b1139; color: white; }
+    .chat-input button { margin-left: 10px; padding: 10px 20px; border: none; border-radius: 8px; background-color: var(--accent); color: white; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <input type="text" class="search-bar" placeholder="Rechercher/lancer une conversation" />
+    <h2>Ajouter</h2>
+    <button class="add-btn" onclick="openPopup()">Ajouter</button>
+  </header>
+
+  <main>
+    <div class="sidebar">
+      <h2>Amis</h2>
+      <div class="friend-list" id="friendList"></div>
+      <div class="user-profile">
+        <div class="avatar" id="avatarLetter">?</div>
+        <span class="username" id="userPseudo">Utilisateur</span>
+        <button class="settings-btn">⚙️</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div id="welcome" class="welcome-box">
+        <h1>Bienvenue sur Sulvania</h1>
+        <p>L’environnement de chat et de discussion entre vos amis</p>
+      </div>
+
+      <div id="chat" style="display:none; flex-direction:column; height:100%;">
+        <div class="chat-area" id="chatArea"></div>
+        <div class="chat-input">
+          <input type="text" id="messageInput" placeholder="Votre message...">
+          <button onclick="sendMessage()">Envoyer</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="popup" id="popup">
+    <div class="popup-box">
+      <button class="close-btn" onclick="closePopup()">×</button>
+      <h3>Ajouter un ami</h3>
+      <input type="text" id="newFriendName" placeholder="Nom d'utilisateur" />
+      <div id="errorMsg" class="error-message"></div>
+      <button onclick="addFriend()">Ajouter</button>
+    </div>
+  </div>
+
+  <script>
+    const popup = document.getElementById("popup");
+    const friendList = document.getElementById("friendList");
+    const errorMsg = document.getElementById("errorMsg");
+    const pseudo = localStorage.getItem('pseudo') || 'Utilisateur';
+    const userPseudo = document.getElementById('userPseudo');
+    const avatarLetter = document.getElementById('avatarLetter');
+    const welcomeBox = document.getElementById('welcome');
+    const chatBox = document.getElementById('chat');
+    const chatArea = document.getElementById('chatArea');
+    let currentContact = null;
+
+    userPseudo.textContent = pseudo;
+    avatarLetter.textContent = pseudo.charAt(0).toUpperCase();
+
+    async function loadContacts() {
+      const res = await fetch('/get-contacts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: pseudo })
+      });
+      const data = await res.json();
+      friendList.innerHTML = '';
+      if (data.contacts.length === 0) {
+        friendList.innerHTML = '<p>Aucun ami</p>';
+      } else {
+        data.contacts.forEach(c => {
+          const el = document.createElement('div');
+          el.className = 'friend';
+          el.textContent = c;
+          el.onclick = () => openChat(c);
+          friendList.appendChild(el);
+        });
+      }
+    }
+
+    async function addFriend() {
+      const name = document.getElementById("newFriendName").value.trim();
+      if (name === '' || name === pseudo) return;
+
+      const check = await fetch('/check-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: name })
+      });
+
+      const exists = await check.json();
+      if (!exists.exists) {
+        errorMsg.textContent = "❌ Utilisateur introuvable";
+        return;
+      }
+
+      const res = await fetch('/add-contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ me: pseudo, contact: name })
+      });
+
+      const added = await res.json();
+      if (added.success) {
+        closePopup();
+        loadContacts();
+      }
+    }
+
+    function openPopup() {
+      popup.style.display = 'flex';
+      errorMsg.textContent = '';
+    }
+
+    function closePopup() {
+      popup.style.display = 'none';
+      document.getElementById("newFriendName").value = '';
+    }
+
+    async function openChat(contact) {
+      currentContact = contact;
+      welcomeBox.style.display = 'none';
+      chatBox.style.display = 'flex';
+      chatArea.innerHTML = '';
+
+      const res = await fetch('/get-messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user1: pseudo, user2: contact })
+      });
+
+      const data = await res.json();
+      data.messages.forEach(msg => {
+        const el = document.createElement('div');
+        el.className = 'chat-message';
+        if (msg.from === pseudo) el.classList.add('me');
+        el.textContent = msg.message;
+        chatArea.appendChild(el);
+      });
+
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const text = input.value.trim();
+      if (text === '' || !currentContact) return;
+
+      await fetch('/send-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: pseudo, to: currentContact, message: text })
+      });
+
+      input.value = '';
+      openChat(currentContact);
+    }
+
+    loadContacts();
+  </script>
+</body>
+</html>
+  
