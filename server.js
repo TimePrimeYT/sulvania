@@ -9,10 +9,10 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 const PORT = process.env.PORT || 3000;
 
+// Middleware
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Fichiers JSON
 const usersPath = './users.json';
 const messagesPath = './messages.json';
 
@@ -35,7 +35,8 @@ function getChatKey(user1, user2) {
   return [user1, user2].sort().join('__');
 }
 
-// ========== AUTH ==========
+// --- AUTH ---
+
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
   const users = readJSON(usersPath);
@@ -57,7 +58,8 @@ app.post('/register', (req, res) => {
   res.json({ success: true });
 });
 
-// ========== CONTACTS ==========
+// --- CONTACTS ---
+
 app.post('/check-user', (req, res) => {
   const { username } = req.body;
   const users = readJSON(usersPath);
@@ -67,16 +69,9 @@ app.post('/check-user', (req, res) => {
 app.post('/add-contact', (req, res) => {
   const { me, contact } = req.body;
   const users = readJSON(usersPath);
-
   if (!users[me] || !users[contact]) return res.json({ success: false });
-
-  if (!users[me].contacts.includes(contact)) {
-    users[me].contacts.push(contact);
-  }
-  if (!users[contact].contacts.includes(me)) {
-    users[contact].contacts.push(me);
-  }
-
+  if (!users[me].contacts.includes(contact)) users[me].contacts.push(contact);
+  if (!users[contact].contacts.includes(me)) users[contact].contacts.push(me);
   writeJSON(usersPath, users);
   res.json({ success: true });
 });
@@ -84,20 +79,17 @@ app.post('/add-contact', (req, res) => {
 app.post('/get-contacts', (req, res) => {
   const { username } = req.body;
   const users = readJSON(usersPath);
-  if (users[username]) {
-    res.json({ contacts: users[username].contacts });
-  } else {
-    res.json({ contacts: [] });
-  }
+  if (users[username]) res.json({ contacts: users[username].contacts });
+  else res.json({ contacts: [] });
 });
 
-// ========== MESSAGES ==========
+// --- MESSAGES ---
+
 app.post('/send-message', (req, res) => {
   const { from, to, message } = req.body;
   const messages = readJSON(messagesPath);
   const key = getChatKey(from, to);
   if (!messages[key]) messages[key] = [];
-
   messages[key].push({ from, message, date: new Date().toISOString() });
   writeJSON(messagesPath, messages);
   res.json({ success: true });
@@ -110,68 +102,56 @@ app.post('/get-messages', (req, res) => {
   res.json({ messages: messages[key] || [] });
 });
 
-// ROUTE PAR DÉFAUT
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
+// --- SALON VOCAL WEBRTC via WebSocket ---
 
-// ========== WebSocket ==========
-let clients = {}; // username => ws
+const rooms = {}; // roomId => array of WebSocket clients
 
 wss.on('connection', (ws) => {
-  ws.on('message', (msg) => {
+  let currentRoom = null;
+
+  ws.on('message', (message) => {
+    let data;
     try {
-      const data = JSON.parse(msg);
+      data = JSON.parse(message);
+    } catch {
+      return;
+    }
 
-      if (data.type === 'register') {
-        clients[data.username] = ws;
-      }
+    if (data.type === 'join_room') {
+      currentRoom = data.roomId;
+      if (!rooms[currentRoom]) rooms[currentRoom] = [];
+      rooms[currentRoom].push(ws);
 
-      if (data.type === 'call_request') {
-        const target = clients[data.to];
-        if (target) {
-          target.send(JSON.stringify({
-            type: 'incoming_call',
-            from: data.from
-          }));
-        }
-      }
+      // Notifie les autres membres du salon
+      rooms[currentRoom].forEach(client => {
+        if (client !== ws) client.send(JSON.stringify({ type: 'peer_joined' }));
+      });
+    }
 
-      if (data.type === 'call_cancel') {
-        const target = clients[data.to];
-        if (target) {
-          target.send(JSON.stringify({
-            type: 'call_cancelled',
-            from: data.from
-          }));
-        }
-      }
-
-      if (data.type === 'call_accepted') {
-        const target = clients[data.to];
-        if (target) {
-          target.send(JSON.stringify({
-            type: 'call_accepted',
-            from: data.from
-          }));
-        }
-      }
-
-    } catch (err) {
-      console.error('Erreur WebSocket:', err.message);
+    if (data.type === 'signal') {
+      if (!currentRoom) return;
+      rooms[currentRoom].forEach(client => {
+        if (client !== ws) client.send(JSON.stringify({ type: 'signal', signal: data.signal }));
+      });
     }
   });
 
   ws.on('close', () => {
-    for (let name in clients) {
-      if (clients[name] === ws) {
-        delete clients[name];
-        break;
-      }
+    if (currentRoom && rooms[currentRoom]) {
+      rooms[currentRoom] = rooms[currentRoom].filter(c => c !== ws);
+      rooms[currentRoom].forEach(client => client.send(JSON.stringify({ type: 'peer_left' })));
     }
   });
 });
 
+// ROUTE PAR DÉFAUT : login.html
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+// LANCEMENT SERVEUR
+
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ Serveur Sulvania lancé sur http://localhost:${PORT}`);
+  console.log(`✅ Serveur lancé sur http://localhost:${PORT}`);
 });
