@@ -5,37 +5,70 @@
   <title>Appel - Sulvania</title>
   <style>
     body {
-      background: #1b0d2c;
-      color: white;
-      font-family: sans-serif;
+      margin: 0;
+      background: linear-gradient(135deg, #1f0b2d, #2d103f);
+      height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
+      color: white;
+      font-family: sans-serif;
+    }
+    h1 {
+      margin-bottom: 20px;
     }
     .call-buttons {
-      margin-top: 40px;
       display: flex;
-      gap: 20px;
+      gap: 30px;
+      margin-top: 40px;
     }
-    .btn {
-      font-size: 24px;
-      border: none;
-      border-radius: 50%;
+    .btn-round {
       width: 70px;
       height: 70px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
       cursor: pointer;
+      border: none;
+      transition: 0.2s;
     }
-    .green { background: #4caf50; color: white; }
-    .red { background: #f44336; color: white; }
+    .btn-red {
+      background-color: #ff3c3c;
+      color: white;
+    }
+    .btn-mic {
+      background-color: #9c44ff;
+      color: white;
+      position: relative;
+    }
+    .btn-headset {
+      background-color: #444;
+      color: white;
+    }
+    .mic-muted::after {
+      content: "";
+      position: absolute;
+      width: 3px;
+      height: 40px;
+      background: red;
+      transform: rotate(45deg);
+    }
+    audio {
+      display: none;
+    }
   </style>
 </head>
 <body>
-  <h1>Appel avec <span id="calleeName">...</span></h1>
+
+  <h1>Appel en cours avec <span id="calleeName">...</span></h1>
 
   <div class="call-buttons">
-    <button id="endCall" class="btn red">❌</button>
+    <button id="btnMic" class="btn-round btn-mic">🎙️</button>
+    <button class="btn-round btn-headset">🎧</button>
+    <button id="btnEnd" class="btn-round btn-red">❌</button>
   </div>
 
   <audio id="ringtone" loop>
@@ -43,17 +76,16 @@
   </audio>
 
   <script>
-    const caller = localStorage.getItem('pseudo');
-    const callee = localStorage.getItem('contactAppel');
+    const callee = localStorage.getItem('contactAppel') || '???';
+    const caller = localStorage.getItem('pseudo') || '???';
     document.getElementById("calleeName").textContent = callee;
 
     const ringtone = document.getElementById("ringtone");
-    ringtone.play().catch(() => {});
+    ringtone.play().catch(() => {}); // Auto-play parfois bloqué
 
-    const socket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}`);
+    const socket = new WebSocket(location.protocol === 'https:' ? 'wss://' + location.hostname : 'ws://' + location.hostname + ':3000');
 
     socket.addEventListener("open", () => {
-      socket.send(JSON.stringify({ type: "register", username: caller }));
       socket.send(JSON.stringify({
         type: "call_request",
         from: caller,
@@ -61,20 +93,9 @@
       }));
     });
 
-    socket.addEventListener("message", event => {
-      const data = JSON.parse(event.data);
-      if (data.type === "call_accepted") {
-        ringtone.pause();
-      }
-      if (data.type === "call_cancelled") {
-        alert(`${callee} a annulé l'appel.`);
-        ringtone.pause();
-        window.location.href = "home.html";
-      }
-    });
-
-    document.getElementById("endCall").onclick = () => {
+    document.getElementById("btnEnd").onclick = () => {
       ringtone.pause();
+      ringtone.currentTime = 0;
       socket.send(JSON.stringify({
         type: "call_cancel",
         from: caller,
@@ -82,10 +103,16 @@
       }));
       window.location.href = "home.html";
     };
+
+    document.getElementById("btnMic").onclick = () => {
+      const mic = document.getElementById("btnMic");
+      mic.classList.toggle("mic-muted");
+    };
   </script>
 
-  <!-- Script de popup d'appel (affiché même en appel) -->
+  <!-- Reçoit les appels même sur call.html -->
   <script src="popup-calls.js"></script>
 </body>
 </html>
+
 

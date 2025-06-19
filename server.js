@@ -9,7 +9,6 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 const PORT = process.env.PORT || 3000;
 
-// Middleware
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -37,7 +36,6 @@ function getChatKey(user1, user2) {
 }
 
 // ========== AUTH ==========
-
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
   const users = readJSON(usersPath);
@@ -60,7 +58,6 @@ app.post('/register', (req, res) => {
 });
 
 // ========== CONTACTS ==========
-
 app.post('/check-user', (req, res) => {
   const { username } = req.body;
   const users = readJSON(usersPath);
@@ -95,7 +92,6 @@ app.post('/get-contacts', (req, res) => {
 });
 
 // ========== MESSAGES ==========
-
 app.post('/send-message', (req, res) => {
   const { from, to, message } = req.body;
   const messages = readJSON(messagesPath);
@@ -114,13 +110,12 @@ app.post('/get-messages', (req, res) => {
   res.json({ messages: messages[key] || [] });
 });
 
-// ====== ROUTE DE BASE
+// ROUTE PAR DÉFAUT
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-// ========== WebSocket pour appels ==========
-
+// ========== WebSocket ==========
 let clients = {}; // username => ws
 
 wss.on('connection', (ws) => {
@@ -176,8 +171,6 @@ wss.on('connection', (ws) => {
     }
   });
 });
-
-// ========== LANCEMENT ==========
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Serveur Sulvania lancé sur http://localhost:${PORT}`);

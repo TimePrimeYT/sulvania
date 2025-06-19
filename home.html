@@ -1,45 +1,121 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Accueil - Sulvania</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
+      background: #1e1e1e;
+      color: white;
       font-family: Arial, sans-serif;
-      background-color: #121212;
-      color: white;
-      text-align: center;
-      padding: 50px;
+      padding: 20px;
     }
-    h1 {
-      margin-bottom: 20px;
+
+    h1, h2 {
+      color: #9c44ff;
     }
-    button {
-      padding: 10px 20px;
+
+    .contact {
+      margin: 10px 0;
+      padding: 10px;
+      background: #2c2c2c;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .contact-name {
       font-size: 18px;
-      margin: 10px;
-      cursor: pointer;
+    }
+
+    .contact button {
+      background: #9c44ff;
       border: none;
-      border-radius: 5px;
-      background-color: #4caf50;
       color: white;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .contact button:hover {
+      background: #b06fff;
+    }
+
+    #logout {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #ff4f4f;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #logout:hover {
+      background: #ff2d2d;
     }
   </style>
 </head>
 <body>
-  <h1>Bienvenue sur Sulvania</h1>
-  <button onclick="startCall()">📞 Appeler un contact</button>
+
+  <button id="logout">Se déconnecter</button>
+
+  <h1>Bienvenue, <span id="usernameDisplay"></span></h1>
+
+  <h2>Mes contacts :</h2>
+  <div id="contactsList">Chargement...</div>
 
   <script>
-    function startCall() {
-      const contact = prompt("Nom du contact à appeler ?");
-      if (!contact) return;
+    const pseudo = localStorage.getItem('pseudo');
+    if (!pseudo) {
+      window.location.href = "login.html";
+    }
+    document.getElementById('usernameDisplay').textContent = pseudo;
+
+    // Déconnexion
+    document.getElementById('logout').onclick = () => {
+      localStorage.clear();
+      window.location.href = "login.html";
+    };
+
+    // Récupération des contacts
+    fetch('/get-contacts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: pseudo })
+    })
+    .then(res => res.json())
+    .then(data => {
+      const list = document.getElementById('contactsList');
+      list.innerHTML = '';
+      if (data.contacts.length === 0) {
+        list.textContent = "Aucun contact pour le moment.";
+        return;
+      }
+
+      data.contacts.forEach(contact => {
+        const div = document.createElement('div');
+        div.className = 'contact';
+        div.innerHTML = `
+          <div class="contact-name">${contact}</div>
+          <button onclick="call('${contact}')">📞 Appeler</button>
+        `;
+        list.appendChild(div);
+      });
+    });
+
+    function call(contact) {
       localStorage.setItem('contactAppel', contact);
       window.location.href = 'call.html';
     }
   </script>
 
-  <!-- Script de popup d'appel -->
+  <!-- Popup d’appel -->
   <script src="popup-calls.js"></script>
 </body>
 </html>
