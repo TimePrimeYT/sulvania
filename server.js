@@ -106,6 +106,11 @@ app.post('/get-messages', (req, res) => {
   res.json({ messages: messages[key] || [] });
 });
 
+// ====== ROUTE RACINE POUR SERVIR login.html =======
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
 // ========== LANCEMENT ==========
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Serveur lancé sur http://localhost:${PORT}`);
