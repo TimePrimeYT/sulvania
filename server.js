@@ -95,6 +95,7 @@ app.post('/get-contacts', (req, res) => {
 });
 
 // ========== MESSAGES ==========
+
 app.post('/send-message', (req, res) => {
   const { from, to, message } = req.body;
   const messages = readJSON(messagesPath);
@@ -119,6 +120,7 @@ app.get('/', (req, res) => {
 });
 
 // ========== WebSocket pour appels ==========
+
 let clients = {}; // username => ws
 
 wss.on('connection', (ws) => {
@@ -150,6 +152,16 @@ wss.on('connection', (ws) => {
         }
       }
 
+      if (data.type === 'call_accepted') {
+        const target = clients[data.to];
+        if (target) {
+          target.send(JSON.stringify({
+            type: 'call_accepted',
+            from: data.from
+          }));
+        }
+      }
+
     } catch (err) {
       console.error('Erreur WebSocket:', err.message);
     }
@@ -166,6 +178,7 @@ wss.on('connection', (ws) => {
 });
 
 // ========== LANCEMENT ==========
+
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Serveur Sulvania lancé sur http://localhost:${PORT}`);
 });
