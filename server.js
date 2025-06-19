@@ -1,7 +1,12 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const http = require('http');
+const WebSocket = require('ws');
+
 const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
 const PORT = process.env.PORT || 3000;
 
 // Middleware
@@ -32,6 +37,7 @@ function getChatKey(user1, user2) {
 }
 
 // ========== AUTH ==========
+
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
   const users = readJSON(usersPath);
@@ -53,7 +59,8 @@ app.post('/register', (req, res) => {
   res.json({ success: true });
 });
 
-// ========== CONTACT ==========
+// ========== CONTACTS ==========
+
 app.post('/check-user', (req, res) => {
   const { username } = req.body;
   const users = readJSON(usersPath);
@@ -106,12 +113,59 @@ app.post('/get-messages', (req, res) => {
   res.json({ messages: messages[key] || [] });
 });
 
-// ====== ROUTE RACINE POUR SERVIR login.html =======
+// ====== ROUTE DE BASE
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
+// ========== WebSocket pour appels ==========
+let clients = {}; // username => ws
+
+wss.on('connection', (ws) => {
+  ws.on('message', (msg) => {
+    try {
+      const data = JSON.parse(msg);
+
+      if (data.type === 'register') {
+        clients[data.username] = ws;
+      }
+
+      if (data.type === 'call_request') {
+        const target = clients[data.to];
+        if (target) {
+          target.send(JSON.stringify({
+            type: 'incoming_call',
+            from: data.from
+          }));
+        }
+      }
+
+      if (data.type === 'call_cancel') {
+        const target = clients[data.to];
+        if (target) {
+          target.send(JSON.stringify({
+            type: 'call_cancelled',
+            from: data.from
+          }));
+        }
+      }
+
+    } catch (err) {
+      console.error('Erreur WebSocket:', err.message);
+    }
+  });
+
+  ws.on('close', () => {
+    for (let name in clients) {
+      if (clients[name] === ws) {
+        delete clients[name];
+        break;
+      }
+    }
+  });
+});
+
 // ========== LANCEMENT ==========
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ Serveur lancé sur http://localhost:${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Serveur Sulvania lancé sur http://localhost:${PORT}`);
 });
