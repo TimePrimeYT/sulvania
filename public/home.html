@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Accueil - Sulvania</title>
+  <style>
+    :root {
+      --bg-start: #1f0b2d;
+      --bg-end: #2d103f;
+      --sidebar-bg: #2b1139;
+      --content-bg: #1e0a2b;
+      --text-color: #fff;
+      --accent: #9c44ff;
+      --accent-hover: #b76aff;
+      --danger: #ff3c3c;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      color: var(--text-color);
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: var(--sidebar-bg);
+      padding: 10px 20px;
+    }
+
+    .search-bar {
+      background-color: #1e0a2b;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: white;
+      width: 250px;
+    }
+
+    .add-btn {
+      background-color: var(--accent);
+      color: white;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .add-btn:hover {
+      background-color: var(--accent-hover);
+    }
+
+    .call-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: var(--sidebar-bg);
+      padding: 8px 20px;
+    }
+
+    .call-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+
+    .call-btn {
+      background-color: var(--accent);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .call-btn:hover {
+      background-color: var(--accent-hover);
+    }
+
+    main {
+      display: flex;
+      flex-grow: 1;
+    }
+
+    .sidebar {
+      width: 280px;
+      background-color: var(--sidebar-bg);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .friend {
+      background-color: #1e0a2b;
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
+    .content {
+      flex-grow: 1;
+      background-color: var(--content-bg);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .input-bar {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #333;
+    }
+
+    .input-bar input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      margin-right: 10px;
+    }
+
+    .input-bar button {
+      background-color: var(--accent);
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .user-profile {
+      margin-top: auto;
+      background-color: #1a0825;
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px 10px 0 0;
+      gap: 10px;
+      height: 60px;
+    }
+
+    .username {
+      flex: 1;
+      color: white;
+      font-weight: bold;
+    }
+
+    .settings-btn {
+      background: none;
+      border: none;
+      color: #ccc;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+
+    .settings-btn:hover {
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <input type="text" class="search-bar" placeholder="Rechercher un contact">
+  <h2>Ajouter</h2>
+  <button class="add-btn" onclick="openPopup()">Ajouter</button>
+</header>
+
+<div class="call-bar" id="callBar" style="display:none">
+  <div class="call-info">
+    <div class="avatar" id="contactAvatar">?</div>
+    <span id="contactName">Contact</span>
+  </div>
+  <button class="call-btn" onclick="alert('Fonction appel à venir...')">📞 Appel</button>
+</div>
+
+<main>
+  <div class="sidebar">
+    <h3>Amis</h3>
+    <div id="friendList"></div>
+    <div class="user-profile">
+      <div class="avatar" id="avatarLetter">?</div>
+      <span class="username" id="userPseudo">Utilisateur</span>
+      <button class="settings-btn" onclick="alert('Paramètres à venir')">⚙️</button>
+    </div>
+  </div>
+  <div class="content">
+    <div class="messages" id="messagesBox">
+      <h1 style="color: var(--accent)">Bienvenue sur Sulvania</h1>
+      <p>L’environnement de chat et de discussion entre vos amis</p>
+    </div>
+    <div class="input-bar" id="messageInputBar" style="display:none;">
+      <input type="text" id="msgInput" placeholder="Écris ton message...">
+      <button onclick="sendMessage()">Envoyer</button>
+    </div>
+  </div>
+</main>
+
+<script>
+  const pseudo = localStorage.getItem('pseudo');
+  const friendList = document.getElementById('friendList');
+  const messagesBox = document.getElementById('messagesBox');
+  const contactNameEl = document.getElementById('contactName');
+  const contactAvatar = document.getElementById('contactAvatar');
+  const callBar = document.getElementById('callBar');
+  const inputBar = document.getElementById('messageInputBar');
+  let currentContact = null;
+
+  document.getElementById('userPseudo').textContent = pseudo;
+  document.getElementById('avatarLetter').textContent = pseudo.charAt(0).toUpperCase();
+
+  function openPopup() {
+    const contact = prompt("Nom de l'utilisateur à ajouter :");
+    if (!contact) return;
+    fetch('/add-contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ me: pseudo, contact })
+    }).then(res => res.json())
+      .then(data => {
+        if (data.success) loadContacts();
+        else alert("Utilisateur introuvable");
+      });
+  }
+
+  function loadContacts() {
+    friendList.innerHTML = "";
+    fetch('/get-contacts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: pseudo })
+    }).then(res => res.json())
+      .then(data => {
+        data.contacts.forEach(contact => {
+          const el = document.createElement('div');
+          el.className = 'friend';
+          el.textContent = contact;
+          el.onclick = () => openChat(contact);
+          friendList.appendChild(el);
+        });
+      });
+  }
+
+  function openChat(contact) {
+    currentContact = contact;
+    callBar.style.display = "flex";
+    inputBar.style.display = "flex";
+    contactNameEl.textContent = contact;
+    contactAvatar.textContent = contact.charAt(0).toUpperCase();
+    loadMessages();
+  }
+
+  function loadMessages() {
+    fetch('/get-messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user1: pseudo, user2: currentContact })
+    }).then(res => res.json())
+      .then(data => {
+        messagesBox.innerHTML = "";
+        data.messages.forEach(msg => {
+          const div = document.createElement('div');
+          div.textContent = `${msg.from} : ${msg.message}`;
+          messagesBox.appendChild(div);
+        });
+      });
+  }
+
+  function sendMessage() {
+    const msg = document.getElementById('msgInput').value;
+    if (!msg) return;
+    fetch('/send-message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: pseudo, to: currentContact, message: msg })
+    }).then(() => {
+      document.getElementById('msgInput').value = '';
+      loadMessages();
+    });
+  }
+
+  setInterval(() => {
+    if (currentContact) loadMessages();
+    loadContacts();
+  }, 3000);
+
+  loadContacts();
+</script>
+
+</body>
+</html>
